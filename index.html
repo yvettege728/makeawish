@@ -117,13 +117,22 @@ const TAGS = [
 let wishes = [], activeFilters = [], fabOpen = false, entryDone = false, entryTimer = null, windowState = {submitTags: [], submitSource: 'remote'}, listMode = false, supabaseReady = false;
 const shell = document.getElementById('shell');
 
+const SUPABASE_URL = 'https://bwsbxmzreztslmxouzrg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3c2J4bXpyZXp0c2xteG91enJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI1OTkwMDAsImV4cCI6MTk5OTk5OTk5OX0.QaysKwZq6J_fmdtZWVIJZQ_QDkFv6pb';
+
 async function callAPI(action, query = '', body = null) {
   try {
     console.log('[API] Calling:', action);
     const response = await fetch('/api/wishes', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action, query, body })
+      body: JSON.stringify({ 
+        action, 
+        query, 
+        body,
+        supabaseUrl: SUPABASE_URL,
+        supabaseKey: SUPABASE_KEY
+      })
     });
     
     const data = await response.json();
