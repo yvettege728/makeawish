@@ -1,49 +1,87 @@
+// Vercel Serverless Function
+// 代理 Supabase 请求，绕过 CORS 问题
+
 const SUPABASE_URL = 'https://bwsbxmzreztslmxouzrg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3c2J4bXpyZXp0c2xteG91enJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI1OTkwMDAsImV4cCI6MTk5OTk5OTk5OX0.QaysKwZq6J_fmdtZWVIJZQ_QDkFv6pb';
 
 export default async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    const { action, query, body } = req.body || {};
+    const { action, query = '', body } = req.body || {};
+
+    if (!action) {
+      return res.status(400).json({ error: 'Missing action parameter' });
+    }
 
     if (action === 'get') {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/wishes' + (query ? '?' + query : '?order=created_at.desc'),
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json'
-          }
+      const url = SUPABASE_URL + '/rest/v1/wishes' + (query ? '?' + query : '?order=created_at.desc');
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
         }
-      );
-      if (!response.ok) throw new Error('Supabase error');
-      return res.status(200).json(await response.json());
+      });
+
+      const text = await response.text();
+      
+      if (!response.ok) {
+        console.error('Supabase GET error:', response.status, text);
+        return res.status(response.status).json({ error: 'Supabase error: ' + response.statusText });
+      }
+
+      try {
+        const data = JSON.parse(text);
+        return res.status(200).json(data);
+      } catch (e) {
+        return res.status(200).json(text);
+      }
     }
 
     if (action === 'post') {
+      if (!body) {
+        return res.status(400).json({ error: 'Missing body parameter' });
+      }
+
       const response = await fetch(SUPABASE_URL + '/rest/v1/wishes', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
         },
         body: JSON.stringify(body)
       });
-      if (!response.ok) throw new Error('Save failed');
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        console.error('Supabase POST error:', response.status, text);
+        return res.status(response.status).json({ error: 'Save failed: ' + response.statusText });
+      }
+
       return res.status(201).json({ success: true });
     }
 
-    return res.status(400).json({ error: 'Invalid action' });
+    return res.status(400).json({ error: 'Unknown action: ' + action });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error('Handler error:', error.message, error.stack);
+    return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 }
