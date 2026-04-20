@@ -40,13 +40,23 @@ body{display:flex;align-items:center;justify-content:center;}
 .mo{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:18px;background:rgba(255,255,255,0.38);}
 .md{position:relative;width:100%;max-height:min(76vh,680px);overflow-y:auto;border-radius:28px;padding:20px 18px 22px;background:rgba(255,255,255,0.97);border:1px solid rgba(30,29,27,0.06);}
 .md-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(30,29,27,0.04);color:rgba(30,29,27,0.46);font-size:18px;cursor:pointer;}
+.md-src{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(240,86,126,0.86);margin-bottom:12px;}
+.md-src .d{width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));}
 .md h2{margin-top:10px;font-family:'Nanum Myeongjo',serif;font-size:30px;font-weight:500;color:rgba(30,29,27,0.92);}
 .sub{margin-top:10px;margin-bottom:18px;font-size:12px;line-height:1.7;color:rgba(30,29,27,0.48);}
 .fs{margin-bottom:16px}
 .fl{display:block;margin-bottom:8px;font-size:10px;text-transform:uppercase;color:rgba(30,29,27,0.34);}
+.rq{color:var(--pink)}
 .ta{width:100%;min-height:112px;border:none;border-radius:18px;padding:14px 16px;background:var(--bg-soft);color:rgba(30,29,27,0.9);font-family:'Nanum Myeongjo',serif;font-size:24px;resize:none;}
 .ta:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(240,86,126,0.25);}
 .cc,.th{margin-top:6px;text-align:right;font-size:10px;color:rgba(30,29,27,0.28);}
+.pi{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg, rgba(240,86,126,0.035), rgba(241,88,77,0.03));cursor:pointer;}
+.pi input{display:none}
+.pi-icon{font-size:26px;color:var(--pink);}
+.pi-t{font-size:12px;color:rgba(30,29,27,0.52);}
+.pp{position:relative;overflow:hidden;border-radius:22px;background:var(--bg-soft);}
+.pp img{display:block;width:100%}
+.rm{position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(30,29,27,0.55);color:#fff;cursor:pointer;}
 .tg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .tc{border:none;border-radius:16px;padding:11px 12px;background:var(--bg-soft);color:rgba(30,29,27,0.54);font-size:11px;cursor:pointer;transition:all 150ms ease;}
 .tc:hover{transform:translateY(-1px)}
@@ -76,100 +86,107 @@ body{display:flex;align-items:center;justify-content:center;}
     <div class="hdr-brand">Make a Wish<span>a participatory archive</span></div>
     <div class="hdr-count" id="wc">0 wishes</div>
   </div>
- 
+
   <div id="entry" class="entry">
     <h1>Make a Wish</h1>
     <div class="entry-copy">when you write down a personal wish, you are joining a collective archive of who we are. What we fear. What we still believe in. You are not alone in this.</div>
     <div class="entry-btns">
-      <button class="eb p" onclick="dismissEntry()">Submit a wish</button>
-      <button class="eb s" onclick="openWishList()">View all wishes</button>
+      <button class="eb p" onclick="dismissEntry('on_site')">I'm here</button>
+      <button class="eb s" onclick="dismissEntry('remote')">Submit remotely</button>
     </div>
   </div>
- 
+
   <div id="wishes-list" class="wishes-list"></div>
- 
+
   <div class="fbar-wrap"><div class="fbar" id="fbar"></div></div>
   <button class="fab" id="fabBtn" onclick="toggleFab()">+</button>
   <div id="fabMenu" class="fab-menu" style="display:none">
-    <button class="fo" onclick="openSubmit()">New wish</button>
+    <button class="fo" onclick="openSubmit('on_site')"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));"></span>On-site</button>
+    <button class="fo" onclick="openSubmit('remote')"><span class="dot" style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));"></span>Remote</button>
   </div>
   <button class="list-toggle" id="list-toggle" onclick="toggleList()">📋</button>
   <div id="app-modals"></div>
   <div id="status" class="status">• Connecting...</div>
 </div>
- 
+
 <script>
 const TAGS = [
   {id:'family',label:'Family & Relationships'},{id:'health',label:'Health'},{id:'identity',label:'Identity & Belonging'},{id:'housing',label:'Housing'},{id:'work',label:'Work & Economy'},{id:'politics',label:'Politics & Public Life'},{id:'environment',label:'Environment & Climate'},{id:'education',label:'Education'},{id:'other',label:'Other'},
 ];
- 
-let wishes = [], activeFilters = [], fabOpen = false, entryDone = false, entryTimer = null, windowState = {submitTags: []}, listMode = false, supabaseReady = false;
+
+let wishes = [], activeFilters = [], fabOpen = false, entryDone = false, entryTimer = null, windowState = {submitTags: [], submitSource: 'remote'}, listMode = false, supabaseReady = false;
 const shell = document.getElementById('shell');
- 
+
 async function callAPI(action, query = '', body = null) {
   try {
+    console.log('[API] Calling:', action);
     const response = await fetch('/api/wishes', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ action, query, body })
     });
-    if (!response.ok) throw new Error('API error: ' + response.status);
-    return await response.json();
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'API error: ' + response.status);
+    }
+    
+    console.log('[API] Success:', action);
+    return data;
   } catch (e) {
-    console.error('API call failed:', e.message);
+    console.error('[API] Failed:', action, e.message);
     throw e;
   }
 }
- 
+
 async function initSupabase() {
   try {
-    console.log('[Make a Wish] Connecting to API...');
-    const data = await callAPI('get', 'limit=1');
+    console.log('[Init] Testing API connection...');
+    await callAPI('get', 'limit=1');
     supabaseReady = true;
-    console.log('[Make a Wish] ✓ Connected');
+    console.log('[Init] ✓ Connected');
     updateStatus('synced', '✓ Synced');
     await loadWishes();
     setupRealtimeListener();
     return true;
   } catch (e) {
-    console.error('[Make a Wish] Connection failed:', e);
+    console.error('[Init] Connection failed:', e);
     updateStatus('error', '✗ Offline');
     return false;
   }
 }
- 
+
 async function setupRealtimeListener() {
   setInterval(async () => {
     try {
       const newWishes = await callAPI('get', 'order=created_at.desc');
       if (newWishes.length !== wishes.length) {
-        console.log('[Make a Wish] 📡 New wishes detected:', newWishes.length);
+        console.log('[Realtime] New wishes detected');
         wishes = newWishes;
         updateCount();
         renderWishes();
       }
-    } catch (e) {
-      console.error('Realtime check failed');
-    }
+    } catch (e) {}
   }, 3000);
 }
- 
+
 async function loadWishes() {
   try {
     updateStatus('syncing', '• Loading...');
-    console.log('[Make a Wish] Loading wishes...');
+    console.log('[Load] Fetching wishes...');
     wishes = await callAPI('get', 'order=created_at.desc');
-    console.log('[Make a Wish] 📥 Loaded', wishes.length, 'wishes');
+    console.log('[Load] Got', wishes.length, 'wishes');
     updateCount();
     renderFilters();
     renderWishes();
     updateStatus('synced', '✓ Synced');
   } catch (e) {
-    console.error('[Make a Wish] Load failed:', e);
+    console.error('[Load] Failed:', e);
     updateStatus('error', '✗ Offline');
   }
 }
- 
+
 async function saveWish(wish) {
   if (!supabaseReady) {
     showMsg('Not connected. Try again later.');
@@ -178,25 +195,26 @@ async function saveWish(wish) {
   try {
     updateStatus('syncing', '• Saving...');
     await callAPI('post', '', wish);
-    console.log('[Make a Wish] ✓ Wish saved');
+    console.log('[Save] ✓ Wish saved');
     updateStatus('synced', '✓ Synced');
     return true;
   } catch (e) {
-    console.error('[Make a Wish] Save failed:', e);
+    console.error('[Save] Failed:', e);
     updateStatus('error', '✗ Error');
+    showMsg('Failed to save. Try again.');
     return false;
   }
 }
- 
+
 function updateStatus(state, text) {
   document.getElementById('status').textContent = text;
   document.getElementById('status').className = 'status ' + state;
 }
- 
+
 function updateCount() {
   document.getElementById('wc').textContent = `${wishes.length} wishes`;
 }
- 
+
 function renderFilters() {
   let html = `<button class="fc ${activeFilters.length===0?'on':''}" onclick="setFilter(null)">All</button>`;
   TAGS.forEach(tag => {
@@ -205,7 +223,7 @@ function renderFilters() {
   });
   document.getElementById('fbar').innerHTML = html;
 }
- 
+
 function renderWishes() {
   const container = document.getElementById('wishes-list');
   const filtered = wishes.filter(w => activeFilters.length === 0 || (w.tags && w.tags.some(t => activeFilters.includes(t))));
@@ -213,7 +231,7 @@ function renderWishes() {
   if (filtered.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:rgba(30,29,27,0.4);">No wishes to display.</div>';
   } else {
-    container.innerHTML = filtered.map((w, i) => `
+    container.innerHTML = filtered.map((w) => `
       <div class="wish-card">
         <div class="wish-text">${w.wish_text || '(no text)'}</div>
         <div class="wish-meta">#${String(wishes.indexOf(w) + 1).padStart(4,'0')} · ${w.created_at ? new Date(w.created_at).toLocaleDateString() : 'Recently'}</div>
@@ -222,49 +240,70 @@ function renderWishes() {
     `).join('');
   }
 }
- 
+
 window.setFilter = function(id) {
   activeFilters = !id ? [] : activeFilters.includes(id) ? activeFilters.filter(item => item !== id) : [...activeFilters, id];
   renderFilters();
   renderWishes();
 };
- 
+
 window.toggleFab = function() {
   fabOpen = !fabOpen;
   document.getElementById('fabBtn').textContent = fabOpen ? '×' : '+';
   document.getElementById('fabMenu').style.display = fabOpen ? 'flex' : 'none';
 };
- 
+
 function toggleList() {
   listMode = !listMode;
   document.getElementById('entry').style.display = listMode ? 'none' : 'flex';
   document.getElementById('wishes-list').classList.toggle('show');
 }
- 
+
 function openWishList() {
-  dismissEntry();
+  dismissEntry(null);
   setTimeout(() => toggleList(), 520);
 }
- 
-function openSubmit() {
+
+function openSubmit(source) {
   fabOpen = false;
   document.getElementById('fabBtn').textContent = '+';
   document.getElementById('fabMenu').style.display = 'none';
   
   windowState.submitTags = [];
+  windowState.submitSource = source;
+  
+  const isOnSite = source === 'on_site';
+  const srcLabel = isOnSite ? 'On-site' : 'Remote';
+  const photoLabel = isOnSite ? 'Upload your wish card' : 'What do you wish for?';
+  const photoSub = isOnSite ? 'Use a photo of your handwritten card, then choose up to two tags.' : 'Leave a short wish fragment, then choose up to two tags.';
   
   modal(`<div class="md" onclick="event.stopPropagation()">
     <button class="md-x" onclick="closeModalButton(this)">×</button>
-    <h2>What do you wish for?</h2>
-    <p class="sub">Write a short wish and choose up to two tags.</p>
-    <div class="fs"><label class="fl">Your wish</label><textarea class="ta" id="sm-t" placeholder="I wish..." maxlength="500" oninput="smU()"></textarea><div class="cc" id="sm-c">0/500</div></div>
-    <div class="fs"><label class="fl">Tags *</label><div class="tg">${TAGS.map(tag => `<button class="tc" type="button" onclick="smT(this,'${tag.id}')">${tag.label}</button>`).join('')}</div><div class="th" id="sm-th">0/2</div></div>
-    <button class="sb" id="sm-sb" type="button" onclick="smS()">Submit wish</button>
+    <div class="md-src"><span class="d"></span>${srcLabel}</div>
+    <h2>${photoLabel}</h2>
+    <p class="sub">${photoSub}</p>
+    ${!isOnSite?`<div class="fs"><label class="fl">Your wish</label><textarea class="ta" id="sm-t" placeholder="I wish..." maxlength="500" oninput="smU()"></textarea><div class="cc" id="sm-c">0/500</div></div>`:''}
+    <div class="fs">
+      <label class="fl">Photo${isOnSite?'<span class="rq"> *</span>':' (optional)'}</label>
+      <div id="sm-pw">
+        <label class="pi">
+          <input type="file" accept="image/*" capture="environment" onchange="smP(this)" />
+          <div class="pi-icon">${isOnSite?'◌':'⌁'}</div>
+          <div class="pi-t">Tap to ${isOnSite?'capture':'upload'} an image</div>
+        </label>
+      </div>
+    </div>
+    <div class="fs">
+      <label class="fl">Tags <span class="rq">*</span></label>
+      <div class="tg">${TAGS.map(tag => `<button class="tc" type="button" onclick="smT(this,'${tag.id}')">${tag.label}</button>`).join('')}</div>
+      <div class="th" id="sm-th">0/2</div>
+    </div>
+    <button class="sb" id="sm-sb" type="button" onclick="smS()" disabled>Submit wish</button>
   </div>`);
   
   setTimeout(() => smCk(), 100);
 }
- 
+
 function modal(html) {
   const wrap = document.createElement('div');
   wrap.className = 'mo';
@@ -274,19 +313,44 @@ function modal(html) {
   wrap.addEventListener('click', event => { if (event.target === wrap) close(); });
   document.getElementById('app-modals').appendChild(wrap);
 }
- 
+
 function closeModalButton(button) {
   const wrap = button.closest('.mo');
   if (wrap && wrap._close) wrap._close();
 }
 window.closeModalButton = closeModalButton;
- 
+
 window.smU = function() {
   const field = document.getElementById('sm-t');
   if (field) document.getElementById('sm-c').textContent = `${field.value.length}/500`;
   smCk();
 };
- 
+
+window.smP = function(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    windowState.submitPhoto = reader.result;
+    document.getElementById('sm-pw').innerHTML = `<div class="pp"><img src="${reader.result}" alt="Preview" /><button class="rm" onclick="smRp()">×</button></div>`;
+    smCk();
+  };
+  reader.readAsDataURL(file);
+};
+
+window.smRp = function() {
+  windowState.submitPhoto = null;
+  const isOnSite = windowState.submitSource === 'on_site';
+  document.getElementById('sm-pw').innerHTML = `
+    <label class="pi">
+      <input type="file" accept="image/*" capture="environment" onchange="smP(this)" />
+      <div class="pi-icon">${isOnSite?'◌':'⌁'}</div>
+      <div class="pi-t">Tap to ${isOnSite?'capture':'upload'} an image</div>
+    </label>
+  `;
+  smCk();
+};
+
 window.smT = function(button, id) {
   const tags = windowState.submitTags || [];
   if (tags.includes(id)) {
@@ -299,35 +363,53 @@ window.smT = function(button, id) {
   document.getElementById('sm-th').textContent = `${windowState.submitTags.length}/2`;
   smCk();
 };
- 
+
 window.smCk = function() {
+  const isOnSite = windowState.submitSource === 'on_site';
   const text = (document.getElementById('sm-t')?.value || '').trim();
-  const hasText = text.length > 0;
+  const hasPhoto = windowState.submitPhoto !== null && windowState.submitPhoto !== undefined;
   const hasTags = (windowState.submitTags || []).length > 0;
-  const valid = hasText && hasTags;
+  
+  let valid = false;
+  if (isOnSite) {
+    valid = hasPhoto && hasTags;
+  } else {
+    valid = (text.length > 0 || hasPhoto) && hasTags;
+  }
+  
   const button = document.getElementById('sm-sb');
   if (button) {
     button.disabled = !valid;
-    console.log('[Form] Text:', hasText, 'Tags:', hasTags, 'Valid:', valid);
   }
 };
- 
+
 window.smS = async function() {
+  const isOnSite = windowState.submitSource === 'on_site';
   const text = (document.getElementById('sm-t')?.value || '').trim();
   const tags = windowState.submitTags || [];
   
-  if (!text || tags.length === 0) {
-    showMsg('Please write a wish and choose tags');
+  if (tags.length === 0) {
+    showMsg('Please choose tags');
+    return;
+  }
+  
+  if (isOnSite && !windowState.submitPhoto) {
+    showMsg('Please upload a photo');
+    return;
+  }
+  
+  if (!isOnSite && !text && !windowState.submitPhoto) {
+    showMsg('Please write a wish or upload a photo');
     return;
   }
   
   const wish = {
     id: 'u' + Date.now() + Math.random().toString(36).substr(2, 9),
     created_at: new Date().toISOString(),
-    source: 'remote',
-    wish_text: text,
+    source: windowState.submitSource,
+    wish_text: isOnSite ? null : text,
     tags: [...tags],
-    photo_url: null,
+    photo_url: windowState.submitPhoto || null,
     reactions: {pray: 0, heart: 0, sparkle: 0, thought: 0}
   };
   
@@ -340,7 +422,7 @@ window.smS = async function() {
     showStamp(wishes.length);
   }
 };
- 
+
 function showStamp(num) {
   const overlay = document.createElement('div');
   overlay.className = 'stamp';
@@ -352,7 +434,7 @@ function showStamp(num) {
     showMsg('Your wish has joined the archive');
   }, 2200);
 }
- 
+
 function showMsg(message) {
   const msg = document.createElement('div');
   msg.className = 'msg';
@@ -360,8 +442,8 @@ function showMsg(message) {
   document.body.appendChild(msg);
   setTimeout(() => msg.remove(), 1800);
 }
- 
-function dismissEntry() {
+
+function dismissEntry(source) {
   clearTimeout(entryTimer);
   if (entryDone) return;
   entryDone = true;
@@ -370,10 +452,10 @@ function dismissEntry() {
   setTimeout(() => {
     entry.style.display = 'none';
     document.getElementById('list-toggle').style.display = 'block';
-    openSubmit();
+    if (source) openSubmit(source);
   }, 520);
 }
- 
+
 window.toggleList = toggleList;
 window.openWishList = openWishList;
 window.addEventListener('keydown', event => {
@@ -382,15 +464,14 @@ window.addEventListener('keydown', event => {
     if (modalNode && modalNode._close) modalNode._close();
   }
 });
- 
+
 (async function() {
-  console.log('[Make a Wish] Initializing...');
+  console.log('[Init] Starting...');
   await initSupabase();
   renderFilters();
-  entryTimer = setTimeout(() => dismissEntry(), 3400);
-  console.log('[Make a Wish] Ready!');
+  entryTimer = setTimeout(() => dismissEntry(null), 3400);
+  console.log('[Init] Ready!');
 })();
 </script>
 </body>
 </html>
- 
