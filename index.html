@@ -51,7 +51,7 @@ body{display:flex;align-items:center;justify-content:center;}
 .tc{border:none;border-radius:16px;padding:11px 12px;background:var(--bg-soft);color:rgba(30,29,27,0.54);font-size:11px;cursor:pointer;transition:all 150ms ease;}
 .tc:hover{transform:translateY(-1px)}
 .tc.sel{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;}
-.sb{width:100%;border:none;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;cursor:pointer;}
+.sb{width:100%;border:none;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;cursor:pointer;font-size:12px;}
 .sb:disabled{opacity:0.34;cursor:not-allowed;}
 .status{position:absolute;bottom:20px;left:20px;font-size:10px;color:rgba(30,29,27,0.5);z-index:20;}
 .status.synced{color:rgba(120,200,140,0.8)}
@@ -76,7 +76,7 @@ body{display:flex;align-items:center;justify-content:center;}
     <div class="hdr-brand">Make a Wish<span>a participatory archive</span></div>
     <div class="hdr-count" id="wc">0 wishes</div>
   </div>
-
+ 
   <div id="entry" class="entry">
     <h1>Make a Wish</h1>
     <div class="entry-copy">when you write down a personal wish, you are joining a collective archive of who we are. What we fear. What we still believe in. You are not alone in this.</div>
@@ -85,9 +85,9 @@ body{display:flex;align-items:center;justify-content:center;}
       <button class="eb s" onclick="openWishList()">View all wishes</button>
     </div>
   </div>
-
+ 
   <div id="wishes-list" class="wishes-list"></div>
-
+ 
   <div class="fbar-wrap"><div class="fbar" id="fbar"></div></div>
   <button class="fab" id="fabBtn" onclick="toggleFab()">+</button>
   <div id="fabMenu" class="fab-menu" style="display:none">
@@ -97,169 +97,106 @@ body{display:flex;align-items:center;justify-content:center;}
   <div id="app-modals"></div>
   <div id="status" class="status">• Connecting...</div>
 </div>
-
+ 
 <script>
-console.log('[Make a Wish] Starting cloud version v2...');
-
-const SUPABASE_URL = 'https://bwsbxmzreztslmxouzrg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3c2J4bXpyZXp0c2xteG91enJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI1OTkwMDAsImV4cCI6MTk5OTk5OTk5OX0.QaysKwZq6J_fmdtZWVIJZQ_QDkFv6pb';
-
 const TAGS = [
-  {id:'family',label:'Family & Relationships'},
-  {id:'health',label:'Health'},
-  {id:'identity',label:'Identity & Belonging'},
-  {id:'housing',label:'Housing'},
-  {id:'work',label:'Work & Economy'},
-  {id:'politics',label:'Politics & Public Life'},
-  {id:'environment',label:'Environment & Climate'},
-  {id:'education',label:'Education'},
-  {id:'other',label:'Other'},
+  {id:'family',label:'Family & Relationships'},{id:'health',label:'Health'},{id:'identity',label:'Identity & Belonging'},{id:'housing',label:'Housing'},{id:'work',label:'Work & Economy'},{id:'politics',label:'Politics & Public Life'},{id:'environment',label:'Environment & Climate'},{id:'education',label:'Education'},{id:'other',label:'Other'},
 ];
-
-let wishes = [];
-let activeFilters = [];
-let fabOpen = false;
-let entryDone = false;
-let entryTimer = null;
-let windowState = {};
-let listMode = false;
-let supabaseReady = false;
-
+ 
+let wishes = [], activeFilters = [], fabOpen = false, entryDone = false, entryTimer = null, windowState = {submitTags: []}, listMode = false, supabaseReady = false;
 const shell = document.getElementById('shell');
-
-// 初始化 Supabase 实时连接
+ 
+async function callAPI(action, query = '', body = null) {
+  try {
+    const response = await fetch('/api/wishes', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action, query, body })
+    });
+    if (!response.ok) throw new Error('API error: ' + response.status);
+    return await response.json();
+  } catch (e) {
+    console.error('API call failed:', e.message);
+    throw e;
+  }
+}
+ 
 async function initSupabase() {
   try {
-    console.log('[Make a Wish] Testing Supabase connection...');
-    const response = await fetch(SUPABASE_URL + '/rest/v1/wishes?limit=1', {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (response.ok) {
-      supabaseReady = true;
-      console.log('[Make a Wish] ✓ Supabase connected');
-      updateStatus('synced', '✓ Synced');
-      await loadWishes();
-      setupRealtimeListener();
-      return true;
-    }
-    throw new Error('Connection failed: ' + response.status);
-  } catch (error) {
-    console.error('[Make a Wish] Connection failed:', error.message);
-    updateStatus('error', '✗ Offline mode');
+    console.log('[Make a Wish] Connecting to API...');
+    const data = await callAPI('get', 'limit=1');
+    supabaseReady = true;
+    console.log('[Make a Wish] ✓ Connected');
+    updateStatus('synced', '✓ Synced');
+    await loadWishes();
+    setupRealtimeListener();
+    return true;
+  } catch (e) {
+    console.error('[Make a Wish] Connection failed:', e);
+    updateStatus('error', '✗ Offline');
     return false;
   }
 }
-
-// 设置实时监听器
+ 
 async function setupRealtimeListener() {
-  if (!supabaseReady) return;
-  
   setInterval(async () => {
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/wishes?order=created_at.desc', {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
-        }
-      });
-      
-      if (response.ok) {
-        const newWishes = await response.json();
-        if (newWishes.length !== wishes.length) {
-          console.log('[Make a Wish] 📡 New wishes detected');
-          wishes = newWishes;
-          updateCount();
-          renderWishes();
-        }
+      const newWishes = await callAPI('get', 'order=created_at.desc');
+      if (newWishes.length !== wishes.length) {
+        console.log('[Make a Wish] 📡 New wishes detected:', newWishes.length);
+        wishes = newWishes;
+        updateCount();
+        renderWishes();
       }
     } catch (e) {
-      console.error('Realtime check failed:', e);
+      console.error('Realtime check failed');
     }
   }, 3000);
 }
-
+ 
 async function loadWishes() {
   try {
     updateStatus('syncing', '• Loading...');
-    const response = await fetch(SUPABASE_URL + '/rest/v1/wishes?order=created_at.desc', {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) throw new Error('Load failed: ' + response.status);
-    
-    wishes = await response.json();
+    console.log('[Make a Wish] Loading wishes...');
+    wishes = await callAPI('get', 'order=created_at.desc');
     console.log('[Make a Wish] 📥 Loaded', wishes.length, 'wishes');
     updateCount();
     renderFilters();
     renderWishes();
     updateStatus('synced', '✓ Synced');
-    
-  } catch (error) {
-    console.error('[Make a Wish] Load failed:', error.message);
+  } catch (e) {
+    console.error('[Make a Wish] Load failed:', e);
     updateStatus('error', '✗ Offline');
   }
 }
-
+ 
 async function saveWish(wish) {
   if (!supabaseReady) {
     showMsg('Not connected. Try again later.');
     return false;
   }
-  
   try {
     updateStatus('syncing', '• Saving...');
-    
-    const response = await fetch(SUPABASE_URL + '/rest/v1/wishes', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        id: wish.id,
-        created_at: wish.created_at,
-        source: wish.source,
-        wish_text: wish.wish_text,
-        tags: wish.tags,
-        photo_url: wish.photo_url,
-        reactions: wish.reactions
-      })
-    });
-    
-    if (!response.ok) throw new Error('Save failed: ' + response.status);
-    
+    await callAPI('post', '', wish);
     console.log('[Make a Wish] ✓ Wish saved');
     updateStatus('synced', '✓ Synced');
     return true;
-  } catch (error) {
-    console.error('[Make a Wish] Save failed:', error.message);
+  } catch (e) {
+    console.error('[Make a Wish] Save failed:', e);
     updateStatus('error', '✗ Error');
     return false;
   }
 }
-
+ 
 function updateStatus(state, text) {
-  const el = document.getElementById('status');
-  el.textContent = text;
-  el.className = 'status ' + state;
+  document.getElementById('status').textContent = text;
+  document.getElementById('status').className = 'status ' + state;
 }
-
+ 
 function updateCount() {
   document.getElementById('wc').textContent = `${wishes.length} wishes`;
 }
-
+ 
 function renderFilters() {
   let html = `<button class="fc ${activeFilters.length===0?'on':''}" onclick="setFilter(null)">All</button>`;
   TAGS.forEach(tag => {
@@ -268,59 +205,47 @@ function renderFilters() {
   });
   document.getElementById('fbar').innerHTML = html;
 }
-
+ 
 function renderWishes() {
   const container = document.getElementById('wishes-list');
-  const filtered = wishes.filter(w => 
-    activeFilters.length === 0 || (w.tags && w.tags.some(t => activeFilters.includes(t)))
-  );
+  const filtered = wishes.filter(w => activeFilters.length === 0 || (w.tags && w.tags.some(t => activeFilters.includes(t))));
   
-  container.innerHTML = filtered.length === 0 
-    ? '<div style="text-align:center;padding:40px 20px;color:rgba(30,29,27,0.4);">No wishes yet. Be the first to share.</div>'
-    : filtered.map((w, i) => {
-      const date = w.created_at ? new Date(w.created_at).toLocaleDateString() : 'Recently';
-      return `
-        <div class="wish-card">
-          <div class="wish-text">${w.wish_text || '(no text)'}</div>
-          <div class="wish-meta">#${String(i + 1).padStart(4,'0')} · ${date}</div>
-          <div class="wish-tags">${(w.tags || []).map(t => {
-            const tag = TAGS.find(tag => tag.id === t);
-            return `<span class="wish-tag">${tag?.label || t}</span>`;
-          }).join('')}</div>
-        </div>
-      `;
-    }).join('');
-}
-
-window.setFilter = function(id) {
-  if (!id) {
-    activeFilters = [];
-  } else if (activeFilters.includes(id)) {
-    activeFilters = activeFilters.filter(item => item !== id);
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:rgba(30,29,27,0.4);">No wishes to display.</div>';
   } else {
-    activeFilters = [...activeFilters, id];
+    container.innerHTML = filtered.map((w, i) => `
+      <div class="wish-card">
+        <div class="wish-text">${w.wish_text || '(no text)'}</div>
+        <div class="wish-meta">#${String(wishes.indexOf(w) + 1).padStart(4,'0')} · ${w.created_at ? new Date(w.created_at).toLocaleDateString() : 'Recently'}</div>
+        <div class="wish-tags">${(w.tags || []).map(t => `<span class="wish-tag">${TAGS.find(tag => tag.id === t)?.label || t}</span>`).join('')}</div>
+      </div>
+    `).join('');
   }
+}
+ 
+window.setFilter = function(id) {
+  activeFilters = !id ? [] : activeFilters.includes(id) ? activeFilters.filter(item => item !== id) : [...activeFilters, id];
   renderFilters();
   renderWishes();
 };
-
+ 
 window.toggleFab = function() {
   fabOpen = !fabOpen;
   document.getElementById('fabBtn').textContent = fabOpen ? '×' : '+';
   document.getElementById('fabMenu').style.display = fabOpen ? 'flex' : 'none';
 };
-
+ 
 function toggleList() {
   listMode = !listMode;
   document.getElementById('entry').style.display = listMode ? 'none' : 'flex';
   document.getElementById('wishes-list').classList.toggle('show');
 }
-
+ 
 function openWishList() {
   dismissEntry();
   setTimeout(() => toggleList(), 520);
 }
-
+ 
 function openSubmit() {
   fabOpen = false;
   document.getElementById('fabBtn').textContent = '+';
@@ -333,39 +258,35 @@ function openSubmit() {
     <h2>What do you wish for?</h2>
     <p class="sub">Write a short wish and choose up to two tags.</p>
     <div class="fs"><label class="fl">Your wish</label><textarea class="ta" id="sm-t" placeholder="I wish..." maxlength="500" oninput="smU()"></textarea><div class="cc" id="sm-c">0/500</div></div>
-    <div class="fs"><label class="fl">Tags *</label><div class="tg">${TAGS.map(tag => `<button class="tc" onclick="smT(this,'${tag.id}')">${tag.label}</button>`).join('')}</div><div class="th" id="sm-th">0/2</div></div>
-    <button class="sb" id="sm-sb" onclick="smS()" disabled>Submit wish</button>
+    <div class="fs"><label class="fl">Tags *</label><div class="tg">${TAGS.map(tag => `<button class="tc" type="button" onclick="smT(this,'${tag.id}')">${tag.label}</button>`).join('')}</div><div class="th" id="sm-th">0/2</div></div>
+    <button class="sb" id="sm-sb" type="button" onclick="smS()">Submit wish</button>
   </div>`);
-};
-
-function modal(html, onClose) {
+  
+  setTimeout(() => smCk(), 100);
+}
+ 
+function modal(html) {
   const wrap = document.createElement('div');
   wrap.className = 'mo';
   wrap.innerHTML = html;
-  const close = () => {
-    wrap.remove();
-    if (typeof onClose === 'function') onClose();
-  };
+  const close = () => wrap.remove();
   wrap._close = close;
-  wrap.addEventListener('click', event => {
-    if (event.target === wrap) close();
-  });
+  wrap.addEventListener('click', event => { if (event.target === wrap) close(); });
   document.getElementById('app-modals').appendChild(wrap);
-  return wrap;
 }
-
+ 
 function closeModalButton(button) {
   const wrap = button.closest('.mo');
   if (wrap && wrap._close) wrap._close();
 }
 window.closeModalButton = closeModalButton;
-
+ 
 window.smU = function() {
   const field = document.getElementById('sm-t');
   if (field) document.getElementById('sm-c').textContent = `${field.value.length}/500`;
   smCk();
 };
-
+ 
 window.smT = function(button, id) {
   const tags = windowState.submitTags || [];
   if (tags.includes(id)) {
@@ -378,28 +299,39 @@ window.smT = function(button, id) {
   document.getElementById('sm-th').textContent = `${windowState.submitTags.length}/2`;
   smCk();
 };
-
+ 
 window.smCk = function() {
-  const text = document.getElementById('sm-t')?.value.trim() || '';
-  const valid = Boolean(text && windowState.submitTags.length);
+  const text = (document.getElementById('sm-t')?.value || '').trim();
+  const hasText = text.length > 0;
+  const hasTags = (windowState.submitTags || []).length > 0;
+  const valid = hasText && hasTags;
   const button = document.getElementById('sm-sb');
-  if (button) button.disabled = !valid;
+  if (button) {
+    button.disabled = !valid;
+    console.log('[Form] Text:', hasText, 'Tags:', hasTags, 'Valid:', valid);
+  }
 };
-
+ 
 window.smS = async function() {
-  const text = document.getElementById('sm-t')?.value.trim() || '';
+  const text = (document.getElementById('sm-t')?.value || '').trim();
+  const tags = windowState.submitTags || [];
+  
+  if (!text || tags.length === 0) {
+    showMsg('Please write a wish and choose tags');
+    return;
+  }
+  
   const wish = {
     id: 'u' + Date.now() + Math.random().toString(36).substr(2, 9),
     created_at: new Date().toISOString(),
     source: 'remote',
     wish_text: text,
-    tags: [...(windowState.submitTags || [])],
+    tags: [...tags],
     photo_url: null,
     reactions: {pray: 0, heart: 0, sparkle: 0, thought: 0}
   };
   
-  const saved = await saveWish(wish);
-  if (saved) {
+  if (await saveWish(wish)) {
     wishes = [wish, ...wishes];
     updateCount();
     renderWishes();
@@ -408,7 +340,7 @@ window.smS = async function() {
     showStamp(wishes.length);
   }
 };
-
+ 
 function showStamp(num) {
   const overlay = document.createElement('div');
   overlay.className = 'stamp';
@@ -420,7 +352,7 @@ function showStamp(num) {
     showMsg('Your wish has joined the archive');
   }, 2200);
 }
-
+ 
 function showMsg(message) {
   const msg = document.createElement('div');
   msg.className = 'msg';
@@ -428,7 +360,7 @@ function showMsg(message) {
   document.body.appendChild(msg);
   setTimeout(() => msg.remove(), 1800);
 }
-
+ 
 function dismissEntry() {
   clearTimeout(entryTimer);
   if (entryDone) return;
@@ -441,30 +373,24 @@ function dismissEntry() {
     openSubmit();
   }, 520);
 }
-
-function initEntry() {
-  entryTimer = setTimeout(() => dismissEntry(), 3400);
-}
-
+ 
 window.toggleList = toggleList;
 window.openWishList = openWishList;
-
 window.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     const modalNode = document.querySelector('#app-modals .mo:last-child');
     if (modalNode && modalNode._close) modalNode._close();
   }
 });
-
-async function init() {
-  console.log('[Make a Wish] Starting initialization...');
+ 
+(async function() {
+  console.log('[Make a Wish] Initializing...');
   await initSupabase();
   renderFilters();
-  initEntry();
+  entryTimer = setTimeout(() => dismissEntry(), 3400);
   console.log('[Make a Wish] Ready!');
-}
-
-init();
+})();
 </script>
 </body>
 </html>
+ 
