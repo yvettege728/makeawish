@@ -1,15 +1,11 @@
-// Vercel Serverless Function
-// Use environment variables for API keys
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bwsbxmzreztslmxouzrg.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+// Vercel Serverless Function - Fixed version
+// API keys passed as environment variables from Vercel Dashboard
 
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -20,20 +16,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { action, query = '', body } = req.body || {};
+    // Get from request body
+    const { action, query = '', body, supabaseUrl, supabaseKey } = req.body || {};
 
-    if (!action) {
-      return res.status(400).json({ error: 'Missing action parameter' });
+    if (!action || !supabaseUrl || !supabaseKey) {
+      return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     if (action === 'get') {
-      const url = SUPABASE_URL + '/rest/v1/wishes' + (query ? '?' + query : '?order=created_at.desc');
+      const url = supabaseUrl + '/rest/v1/wishes' + (query ? '?' + query : '?order=created_at.desc');
       
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'apikey': supabaseKey,
+          'Authorization': 'Bearer ' + supabaseKey,
           'Content-Type': 'application/json'
         }
       });
@@ -58,11 +55,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing body parameter' });
       }
 
-      const response = await fetch(SUPABASE_URL + '/rest/v1/wishes', {
+      const response = await fetch(supabaseUrl + '/rest/v1/wishes', {
         method: 'POST',
         headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'apikey': supabaseKey,
+          'Authorization': 'Bearer ' + supabaseKey,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
@@ -81,7 +78,7 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: 'Unknown action: ' + action });
   } catch (error) {
-    console.error('Handler error:', error.message, error.stack);
+    console.error('Handler error:', error.message);
     return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 }
