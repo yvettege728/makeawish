@@ -1,8 +1,8 @@
 // Vercel Serverless Function
-// 代理 Supabase 请求，绕过 CORS 问题
+// Use environment variables for API keys
 
-const SUPABASE_URL = 'https://bwsbxmzreztslmxouzrg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3c2J4bXpyZXp0c2xteG91enJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI1OTkwMDAsImV4cCI6MTk5OTk5OTk5OX0.QaysKwZq6J_fmdtZWVIJZQ_QDkFv6pb';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bwsbxmzreztslmxouzrg.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
 
 export default async function handler(req, res) {
   // CORS headers
