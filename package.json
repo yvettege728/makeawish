@@ -1,0 +1,9 @@
+{
+  "name": "make-a-wish",
+  "version": "1.0.0",
+  "description": "A participatory archive of wishes",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Skipping build step'",
+  "public": true,
+  "env": {
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_ANON_KEY": "@supabase_anon_key"
+  }
+}
