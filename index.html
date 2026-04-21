@@ -1,96 +1,452 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Make a Wish</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Make a Wish</title>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#fff;--ink:#1e1d1b;--pink:#F0567E;--orange:#F1584D;}*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;font-family:'Nanum Gothic';background:linear-gradient(#fff 0%,#fbf8f5 100%);color:var(--ink);}body{display:flex;align-items:center;justify-content:center;}.shell{width:min(430px,100vw);height:min(860px,100vh);position:relative;background:linear-gradient(#fff94%,#fff90%);border-radius:42px;box-shadow:0 28px 80px rgba(0,0,0,0.05);overflow:hidden;}@media(max-width:430px){.shell{border-radius:0;width:100vw;height:100vh;}}.hdr{position:absolute;top:20px;left:20px;right:20px;z-index:12;display:flex;justify-content:space-between;}.hdr-brand{font-family:'Nanum Myeongjo';font-size:18px;color:rgba(30,29,27,0.78);}.hdr-brand span{display:block;font-size:10px;margin-top:5px;text-transform:uppercase;letter-spacing:0.18em;color:rgba(30,29,27,0.34);}.hdr-count{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(30,29,27,0.35);}.entry{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#fff97%,#fff92%);transition:opacity 500ms;}.entry.gone{opacity:0;pointer-events:none}.entry h1{font-family:'Nanum Myeongjo';font-size:56px;font-weight:500;text-align:center;color:rgba(30,29,27,0.9);}.entry-copy{max-width:254px;margin-top:26px;font-size:12px;line-height:1.92;text-align:center;color:rgba(30,29,27,0.48);}.entry-btns{display:flex;flex-direction:column;gap:10px;width:220px;margin-top:28px;}.eb{border:none;border-radius:999px;padding:13px 18px;font-size:12px;cursor:pointer;}.eb.p{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:0 16px 28px rgba(240,86,126,0.22);}.eb.s{background:rgba(255,255,255,0.84);color:rgba(30,29,27,0.8);border:1px solid rgba(30,29,27,0.07);}.wishes-list{position:absolute;inset:0;z-index:25;display:none;overflow-y:auto;padding:80px 16px 100px;background:#fff;}.wishes-list.show{display:block}.wish-card{margin-bottom:16px;padding:14px;background:#fbf9f7;border-radius:14px;border:1px solid rgba(30,29,27,0.05);}.wish-text{font-family:'Nanum Myeongjo';font-size:28px;line-height:0.95;color:rgba(30,29,27,0.9);margin-bottom:10px;}.wish-meta{font-size:10px;color:rgba(30,29,27,0.4);}.wish-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}.wish-tag{font-size:9px;padding:4px 8px;border-radius:999px;background:rgba(240,86,126,0.1);color:var(--pink);text-transform:uppercase;}.fbar-wrap{position:absolute;left:14px;right:14px;bottom:18px;z-index:15;display:flex;justify-content:center;}.fbar{display:flex;gap:6px;max-width:100%;overflow-x:auto;padding:8px;border-radius:999px;background:rgba(255,255,255,0.68);}.fc{border:none;border-radius:999px;padding:6px 12px;white-space:nowrap;background:transparent;color:rgba(30,29,27,0.42);font-size:10px;cursor:pointer;}.fc.on{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;}.fab{position:absolute;right:18px;bottom:76px;z-index:18;width:54px;height:54px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;font-size:24px;cursor:pointer;box-shadow:0 16px 30px rgba(240,86,126,0.22);}.fab-menu{position:absolute;right:18px;bottom:138px;z-index:17;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}.fo{display:inline-flex;align-items:center;gap:8px;border:none;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,0.92);color:rgba(30,29,27,0.76);font-size:11px;cursor:pointer;}#app-modals{position:absolute;inset:0;z-index:60;pointer-events:none;}#app-modals .mo{pointer-events:auto}.mo{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:18px;background:rgba(255,255,255,0.38);}.md{position:relative;width:100%;max-height:min(76vh,680px);overflow-y:auto;border-radius:28px;padding:20px 18px 22px;background:rgba(255,255,255,0.97);}.md-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(30,29,27,0.04);color:rgba(30,29,27,0.46);font-size:18px;cursor:pointer;}.md h2{margin-top:10px;font-family:'Nanum Myeongjo';font-size:30px;font-weight:500;color:rgba(30,29,27,0.92);}.sub{margin-top:10px;margin-bottom:18px;font-size:12px;line-height:1.7;color:rgba(30,29,27,0.48);}.fs{margin-bottom:16px}.fl{display:block;margin-bottom:8px;font-size:10px;text-transform:uppercase;color:rgba(30,29,27,0.34);}.ta{width:100%;min-height:112px;border:none;border-radius:18px;padding:14px 16px;background:#fbf9f7;color:rgba(30,29,27,0.9);font-family:'Nanum Myeongjo';font-size:24px;resize:none;}.ta:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(240,86,126,0.25);}.cc{margin-top:6px;text-align:right;font-size:10px;color:rgba(30,29,27,0.28);}.tg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}.tc{border:none;border-radius:16px;padding:11px 12px;background:#fbf9f7;color:rgba(30,29,27,0.54);font-size:11px;cursor:pointer;}.tc.sel{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;}.sb{width:100%;border:none;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;cursor:pointer;font-size:12px;}.sb:disabled{opacity:0.34;cursor:not-allowed;}.msg{position:fixed;left:50%;bottom:138px;transform:translateX(-50%);z-index:55;padding:10px 14px;border-radius:999px;background:rgba(30,29,27,0.86);color:#fff;font-size:11px;white-space:nowrap;}.status{position:absolute;bottom:20px;left:20px;font-size:10px;color:#999;z-index:20;}.status.ok{color:#6c8}
+:root{--bg:#fff;--ink:#1e1d1b;--pink:#F0567E;--orange:#F1584D;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;font-family:'Nanum Gothic';background:linear-gradient(#fff 0%,#fbf8f5 100%);color:var(--ink);}
+body{display:flex;align-items:center;justify-content:center;}
+.shell{width:min(430px,100vw);height:min(860px,100vh);position:relative;background:linear-gradient(#fff 94%,#fff9f5 100%);border-radius:42px;box-shadow:0 28px 80px rgba(0,0,0,0.05);overflow:hidden;}
+@media(max-width:430px){.shell{border-radius:0;width:100vw;height:100vh;}}
+.hdr{position:absolute;top:20px;left:20px;right:20px;z-index:12;display:flex;justify-content:space-between;}
+.hdr-brand{font-family:'Nanum Myeongjo';font-size:18px;color:rgba(30,29,27,0.78);}
+.hdr-brand span{display:block;font-size:10px;margin-top:5px;text-transform:uppercase;letter-spacing:0.18em;color:rgba(30,29,27,0.34);}
+.hdr-count{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(30,29,27,0.35);}
+.entry{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#fff 97%,#fff9f2 100%);transition:opacity 500ms;}
+.entry.gone{opacity:0;pointer-events:none}
+.entry h1{font-family:'Nanum Myeongjo';font-size:56px;font-weight:500;text-align:center;color:rgba(30,29,27,0.9);}
+.entry-copy{max-width:254px;margin-top:26px;font-size:12px;line-height:1.92;text-align:center;color:rgba(30,29,27,0.48);}
+.entry-btns{display:flex;flex-direction:column;gap:10px;width:220px;margin-top:28px;}
+.eb{border:none;border-radius:999px;padding:13px 18px;font-size:12px;cursor:pointer;}
+.eb.p{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:0 16px 28px rgba(240,86,126,0.22);}
+.eb.s{background:rgba(255,255,255,0.84);color:rgba(30,29,27,0.8);border:1px solid rgba(30,29,27,0.07);}
+.wishes-list{position:absolute;inset:0;z-index:25;display:none;overflow-y:auto;padding:80px 16px 100px;background:#fff;}
+.wishes-list.show{display:block}
+.wish-card{margin-bottom:16px;padding:14px;background:#fbf9f7;border-radius:14px;border:1px solid rgba(30,29,27,0.05);}
+.wish-photo{display:block;width:100%;margin-bottom:12px;border-radius:16px;object-fit:cover;background:#f3efeb;}
+.wish-text{font-family:'Nanum Myeongjo';font-size:28px;line-height:0.95;color:rgba(30,29,27,0.9);margin-bottom:10px;}
+.wish-meta{font-size:10px;color:rgba(30,29,27,0.4);}
+.wish-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.wish-tag{font-size:9px;padding:4px 8px;border-radius:999px;background:rgba(240,86,126,0.1);color:var(--pink);text-transform:uppercase;}
+.fbar-wrap{position:absolute;left:14px;right:14px;bottom:18px;z-index:15;display:flex;justify-content:center;}
+.fbar{display:flex;gap:6px;max-width:100%;overflow-x:auto;padding:8px;border-radius:999px;background:rgba(255,255,255,0.68);}
+.fc{border:none;border-radius:999px;padding:6px 12px;white-space:nowrap;background:transparent;color:rgba(30,29,27,0.42);font-size:10px;cursor:pointer;}
+.fc.on{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;}
+.fab{position:absolute;right:18px;bottom:76px;z-index:18;width:54px;height:54px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;font-size:24px;cursor:pointer;box-shadow:0 16px 30px rgba(240,86,126,0.22);}
+.fab-menu{position:absolute;right:18px;bottom:138px;z-index:17;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.fo{display:inline-flex;align-items:center;gap:8px;border:none;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,0.92);color:rgba(30,29,27,0.76);font-size:11px;cursor:pointer;}
+#app-modals{position:absolute;inset:0;z-index:60;pointer-events:none;}
+#app-modals .mo{pointer-events:auto}
+.mo{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:18px;background:rgba(255,255,255,0.38);}
+.md{position:relative;width:100%;max-height:min(76vh,680px);overflow-y:auto;border-radius:28px;padding:20px 18px 22px;background:rgba(255,255,255,0.97);}
+.md-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(30,29,27,0.04);color:rgba(30,29,27,0.46);font-size:18px;cursor:pointer;}
+.md h2{margin-top:10px;font-family:'Nanum Myeongjo';font-size:30px;font-weight:500;color:rgba(30,29,27,0.92);}
+.sub{margin-top:10px;margin-bottom:18px;font-size:12px;line-height:1.7;color:rgba(30,29,27,0.48);}
+.fs{margin-bottom:16px}
+.fl{display:block;margin-bottom:8px;font-size:10px;text-transform:uppercase;color:rgba(30,29,27,0.34);}
+.ta{width:100%;min-height:112px;border:none;border-radius:18px;padding:14px 16px;background:#fbf9f7;color:rgba(30,29,27,0.9);font-family:'Nanum Myeongjo';font-size:24px;resize:none;}
+.ta:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(240,86,126,0.25);}
+.cc{margin-top:6px;text-align:right;font-size:10px;color:rgba(30,29,27,0.28);}
+.tg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.tc{border:none;border-radius:16px;padding:11px 12px;background:#fbf9f7;color:rgba(30,29,27,0.54);font-size:11px;cursor:pointer;}
+.tc.sel{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;}
+.sb{width:100%;border:none;border-radius:999px;padding:14px 18px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;cursor:pointer;font-size:12px;}
+.sb:disabled{opacity:0.34;cursor:not-allowed;}
+.msg{position:fixed;left:50%;bottom:138px;transform:translateX(-50%);z-index:55;padding:10px 14px;border-radius:999px;background:rgba(30,29,27,0.86);color:#fff;font-size:11px;white-space:nowrap;}
+.status{position:absolute;bottom:20px;left:20px;font-size:10px;color:#999;z-index:20;}
+.status.ok{color:#6c8}
 </style>
 </head>
 <body>
 <div class="shell" id="shell">
-<div class="hdr"><div class="hdr-brand">Make a Wish<span>a participatory archive</span></div><div class="hdr-count" id="wc">0 wishes</div></div>
-<div id="entry" class="entry"><h1>Make a Wish</h1><div class="entry-copy">when you write down a personal wish, you are joining a collective archive of who we are. What we fear. What we still believe in. You are not alone in this.</div><div class="entry-btns"><button class="eb p" onclick="dismissEntry('on_site')">I'm here</button><button class="eb s" onclick="dismissEntry('remote')">Submit remotely</button></div></div>
-<div id="wishes-list" class="wishes-list"></div>
-<div class="fbar-wrap"><div class="fbar" id="fbar"></div></div>
-<button class="fab" id="fabBtn" onclick="toggleFab()">+</button>
-<div id="fabMenu" class="fab-menu" style="display:none"><button class="fo" onclick="openSubmit('on_site')"><span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#F0567E,#F1584D);display:inline-block;"></span>On-site</button><button class="fo" onclick="openSubmit('remote')"><span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#F0567E,#F1584D);display:inline-block;"></span>Remote</button></div>
-<div id="app-modals"></div><div id="status" class="status">• Connecting...</div>
+  <div class="hdr">
+    <div class="hdr-brand">Make a Wish<span>a participatory archive</span></div>
+    <div class="hdr-count" id="wc">0 wishes</div>
+  </div>
+  <div id="entry" class="entry">
+    <h1>Make a Wish</h1>
+    <div class="entry-copy">when you write down a personal wish, you are joining a collective archive of who we are. What we fear. What we still believe in. You are not alone in this.</div>
+    <div class="entry-btns">
+      <button class="eb p" onclick="dismissEntry('on_site')">I'm here</button>
+      <button class="eb s" onclick="dismissEntry('remote')">Submit remotely</button>
+    </div>
+  </div>
+  <div id="wishes-list" class="wishes-list"></div>
+  <div class="fbar-wrap"><div class="fbar" id="fbar"></div></div>
+  <button class="fab" id="fabBtn" onclick="toggleFab()">+</button>
+  <div id="fabMenu" class="fab-menu" style="display:none">
+    <button class="fo" onclick="openSubmit('on_site')"><span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#F0567E,#F1584D);display:inline-block;"></span>On-site</button>
+    <button class="fo" onclick="openSubmit('remote')"><span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#F0567E,#F1584D);display:inline-block;"></span>Remote</button>
+  </div>
+  <div id="app-modals"></div>
+  <div id="status" class="status">• Connecting...</div>
 </div>
 
-<script>
-const TAGS=[{id:'family',label:'Family & Relationships'},{id:'health',label:'Health'},{id:'identity',label:'Identity & Belonging'},{id:'housing',label:'Housing'},{id:'work',label:'Work & Economy'},{id:'politics',label:'Politics & Public Life'},{id:'environment',label:'Environment & Climate'},{id:'education',label:'Education'},{id:'other',label:'Other'}];
+<script type="module">
+import { buildPublicStorageUrl, buildStorageObjectPath } from './makeawish-storage.js';
 
-let wishes=[],activeFilters=[],fabOpen=false,entryDone=false,windowState={submitTags:[],submitPhoto:null,submitSource:'remote'};
+const TAGS = [
+  { id: 'family', label: 'Family & Relationships' },
+  { id: 'health', label: 'Health' },
+  { id: 'identity', label: 'Identity & Belonging' },
+  { id: 'housing', label: 'Housing' },
+  { id: 'work', label: 'Work & Economy' },
+  { id: 'politics', label: 'Politics & Public Life' },
+  { id: 'environment', label: 'Environment & Climate' },
+  { id: 'education', label: 'Education' },
+  { id: 'other', label: 'Other' }
+];
 
-async function api(method,query='',body=null){
-  try{
-    const url='/api/proxy'+(query?'?'+query:'?order=created_at.desc');
-    const headers={'Content-Type':'application/json'};
-    
-    if(method==='GET'){
-      const r=await fetch(url,{headers});
-      if(!r.ok)throw new Error(r.status);
-      return await r.json();
+const SUPABASE_URL = 'https://bwsbxmzreztslmxouzrg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QaysKwZq6J_fmdtZWVIJZQ_QDkFv6pb';
+const STORAGE_BUCKET = 'wish-photos';
+
+let wishes = [];
+let activeFilters = [];
+let fabOpen = false;
+let entryDone = false;
+let pollTimer = null;
+let windowState = {
+  submitTags: [],
+  submitPhotoFile: null,
+  submitPhotoPreviewUrl: null,
+  submitSource: 'remote'
+};
+
+async function api(method, query = '', body = null) {
+  const url = '/api/proxy' + (query ? '?' + query : '?order=created_at.desc');
+  const requestInit = method === 'POST'
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }
+    : {
+        headers: { 'Content-Type': 'application/json' }
+      };
+  const r = await fetch(url, requestInit);
+  if (!r.ok) {
+    const detail = await r.text();
+    throw new Error(`${method} ${r.status}: ${detail}`);
+  }
+  return method === 'GET' ? await r.json() : true;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function setStatus(msg, ok = false) {
+  document.getElementById('status').textContent = msg;
+  document.getElementById('status').className = 'status' + (ok ? ' ok' : '');
+}
+
+function updateCount() {
+  document.getElementById('wc').textContent = wishes.length + ' wishes';
+}
+
+function renderFilters() {
+  let h = '<button class="fc on" onclick="setFilter(null)">All</button>';
+  TAGS.forEach(t => {
+    const active = activeFilters.includes(t.id);
+    h += '<button class="fc ' + (active ? 'on' : '') + '" onclick="setFilter(\'' + t.id + '\')">' + t.label + '</button>';
+  });
+  document.getElementById('fbar').innerHTML = h;
+}
+
+function renderWishes() {
+  const container = document.getElementById('wishes-list');
+  const filtered = wishes.filter(w => activeFilters.length === 0 || w.tags?.some(t => activeFilters.includes(t)));
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#aaa;">No wishes to display.</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(w => {
+    const photo = w.photo_url
+      ? '<img class="wish-photo" src="' + escapeHtml(w.photo_url) + '" alt="Wish image" loading="lazy"/>'
+      : '';
+    const text = w.wish_text
+      ? '<div class="wish-text">' + escapeHtml(w.wish_text) + '</div>'
+      : '';
+    const fallback = !photo && !text ? '<div class="wish-text">(no content)</div>' : '';
+    const tags = (w.tags || [])
+      .map(tag => '<span class="wish-tag">' + escapeHtml(TAGS.find(x => x.id === tag)?.label || tag) + '</span>')
+      .join('');
+
+    return '<div class="wish-card">' +
+      photo +
+      text +
+      fallback +
+      '<div class="wish-meta">#' + String(wishes.indexOf(w) + 1).padStart(4, '0') + ' · ' + new Date(w.created_at).toLocaleDateString() + '</div>' +
+      '<div class="wish-tags">' + tags + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function resetPhotoState() {
+  if (windowState.submitPhotoPreviewUrl) {
+    URL.revokeObjectURL(windowState.submitPhotoPreviewUrl);
+  }
+  windowState.submitPhotoFile = null;
+  windowState.submitPhotoPreviewUrl = null;
+}
+
+function closeAllModals() {
+  document.querySelectorAll('#app-modals .mo').forEach(el => el.remove());
+  resetPhotoState();
+}
+
+function storageHelpMessage(detail) {
+  if (detail.includes('Bucket not found')) {
+    return 'Supabase Storage 里还没有 `wish-photos` bucket。先在 Storage 新建一个 public bucket，名字就叫 `wish-photos`。';
+  }
+  if (detail.includes('row-level security') || detail.includes('Unauthorized')) {
+    return '图片上传被 Supabase Storage 权限挡住了。需要给 bucket `wish-photos` 开匿名上传权限，并允许公开读取。';
+  }
+  return detail;
+}
+
+async function uploadPhoto(file, source) {
+  const objectPath = buildStorageObjectPath(source, file.name || 'upload', new Date());
+  const uploadUrl = SUPABASE_URL + '/storage/v1/object/' + STORAGE_BUCKET + '/' + objectPath;
+  const headers = {
+    apikey: SUPABASE_KEY,
+    Authorization: 'Bearer ' + SUPABASE_KEY,
+    'x-upsert': 'false',
+    'Content-Type': file.type || 'application/octet-stream'
+  };
+  const r = await fetch(uploadUrl, { method: 'POST', headers, body: file });
+  if (!r.ok) {
+    const detail = await r.text();
+    throw new Error(storageHelpMessage(detail));
+  }
+  return buildPublicStorageUrl(SUPABASE_URL, STORAGE_BUCKET, objectPath);
+}
+
+async function load() {
+  setStatus('• Loading...');
+  try {
+    wishes = await api('GET');
+    updateCount();
+    renderFilters();
+    renderWishes();
+    setStatus('✓ Synced', true);
+    if (!pollTimer) {
+      pollTimer = setInterval(async () => {
+        try {
+          const nextWishes = await api('GET');
+          if (Array.isArray(nextWishes) && nextWishes.length !== wishes.length) {
+            wishes = nextWishes;
+            updateCount();
+            renderWishes();
+          }
+        } catch (e) {
+          console.error('[Poll]', e.message);
+          setStatus('✗ Sync failed');
+        }
+      }, 3000);
     }
-    if(method==='POST'){
-      const r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
-      if(!r.ok)throw new Error(r.status);
-      return true;
-    }
-  }catch(e){
-    console.error('[API]',e.message);
-    return method==='GET'?[]:false;
+  } catch (e) {
+    console.error('[Load]', e.message);
+    wishes = [];
+    updateCount();
+    renderFilters();
+    renderWishes();
+    setStatus('✗ Load failed');
   }
 }
 
-async function load(){
-  setStatus('• Loading...');
-  wishes=await api('GET');
-  console.log('[Load]',wishes.length,'wishes');
-  updateCount();
-  renderFilters();
-  renderWishes();
-  setStatus('✓ Synced',true);
-  setInterval(async()=>{
-    const w=await api('GET');
-    if(w&&w.length!==wishes.length){wishes=w;updateCount();renderWishes();}
-  },3000);
+function modal(html) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'mo';
+  wrapper.innerHTML = html;
+  wrapper.addEventListener('click', event => {
+    if (event.target === wrapper) {
+      closeAllModals();
+    }
+  });
+  document.getElementById('app-modals').appendChild(wrapper);
 }
 
-function setStatus(msg,ok=false){document.getElementById('status').textContent=msg;document.getElementById('status').className='status'+(ok?' ok':'');}
-function updateCount(){document.getElementById('wc').textContent=wishes.length+' wishes';}
-function renderFilters(){let h='<button class="fc on" onclick="setFilter(null)">All</button>';TAGS.forEach(t=>{const a=activeFilters.includes(t.id);h+='<button class="fc '+(a?'on':'')+'" onclick="setFilter(\''+t.id+'\')">'+t.label+'</button>';});document.getElementById('fbar').innerHTML=h;}
-function renderWishes(){const c=document.getElementById('wishes-list'),f=wishes.filter(w=>activeFilters.length===0||w.tags?.some(t=>activeFilters.includes(t)));c.innerHTML=f.length===0?'<div style="text-align:center;padding:40px 20px;color:#aaa;">No wishes to display.</div>':f.map(w=>'<div class="wish-card"><div class="wish-text">'+(w.wish_text||'(no text)')+'</div><div class="wish-meta">#'+String(wishes.indexOf(w)+1).padStart(4,'0')+' · '+new Date(w.created_at).toLocaleDateString()+'</div><div class="wish-tags">'+(w.tags||[]).map(t=>'<span class="wish-tag">'+TAGS.find(x=>x.id===t)?.label+'</span>').join('')+'</div></div>').join('');}
-
-window.setFilter=function(id){activeFilters=!id?[]:(activeFilters.includes(id)?activeFilters.filter(x=>x!==id):[...activeFilters,id]);renderFilters();renderWishes();};
-window.toggleFab=function(){fabOpen=!fabOpen;document.getElementById('fabBtn').textContent=fabOpen?'×':'+';document.getElementById('fabMenu').style.display=fabOpen?'flex':'none';};
-
-window.openSubmit=function(source){
-  fabOpen=false;document.getElementById('fabBtn').textContent='+';document.getElementById('fabMenu').style.display='none';
-  windowState.submitTags=[];windowState.submitPhoto=null;windowState.submitSource=source;
-  const isOn=source==='on_site';
-  const photoHtml=isOn?'<div class="fs"><label class="fl">Photo <span style="color:var(--pink);">*</span></label><div id="sm-pw"><label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">◌</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to capture</div></label></div></div>':'<div class="fs"><label class="fl">Photo (optional)</label><div id="sm-pw"><label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">⌁</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to upload</div></label></div></div>';
-  modal('<div class="md" onclick="event.stopPropagation()"><button class="md-x" onclick="closeModal(this)">×</button><h2>'+(isOn?'Upload your wish card':'What do you wish for?')+'</h2><p class="sub">'+(isOn?'Use a photo of your handwritten card, then choose up to two tags.':'Leave a short wish fragment, then choose up to two tags.')+'</p>'+(isOn?'':' <div class="fs"><label class="fl">Your wish</label><textarea class="ta" id="sm-t" placeholder="I wish..." maxlength="500" oninput="smU()"></textarea><div class="cc" id="sm-c">0/500</div></div>')+photoHtml+'<div class="fs"><label class="fl">Tags <span style="color:var(--pink);">*</span></label><div class="tg">'+TAGS.map(t=>'<button class="tc" type="button" onclick="smT(this,\''+t.id+'\')">'+t.label+'</button>').join('')+'</div><div style="margin-top:6px;text-align:right;font-size:10px;color:rgba(30,29,27,0.28);" id="sm-th">0/2</div></div><button class="sb" id="sm-sb" type="button" onclick="smS()" disabled>Submit wish</button></div>');
-  setTimeout(()=>smCk(),100);
+window.setFilter = function(id) {
+  activeFilters = !id ? [] : (activeFilters.includes(id) ? activeFilters.filter(x => x !== id) : [...activeFilters, id]);
+  renderFilters();
+  renderWishes();
 };
 
-function modal(html){const w=document.createElement('div');w.className='mo';w.innerHTML=html;w.addEventListener('click',e=>{if(e.target===w)w.remove();});document.getElementById('app-modals').appendChild(w);}
-function closeModal(btn){btn.closest('.mo')?.remove();}
+window.toggleFab = function() {
+  fabOpen = !fabOpen;
+  document.getElementById('fabBtn').textContent = fabOpen ? '×' : '+';
+  document.getElementById('fabMenu').style.display = fabOpen ? 'flex' : 'none';
+};
 
-window.smU=function(){const f=document.getElementById('sm-t');if(f)document.getElementById('sm-c').textContent=f.value.length+'/500';smCk();};
-window.smP=function(input){const file=input.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{windowState.submitPhoto=reader.result;document.getElementById('sm-pw').innerHTML='<div style="position:relative;overflow:hidden;border-radius:22px;background:#fbf9f7;"><img src="'+reader.result+'" alt="Preview" style="display:block;width:100%;"/><button class="rm" onclick="smRp()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(30,29,27,0.55);color:#fff;cursor:pointer;">×</button></div>';smCk();};reader.readAsDataURL(file);};
-window.smRp=function(){windowState.submitPhoto=null;const isOn=windowState.submitSource==='on_site';document.getElementById('sm-pw').innerHTML='<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">'+(isOn?'◌':'⌁')+'</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to '+(isOn?'capture':'upload')+'</div></label>';smCk();};
-window.smT=function(btn,id){const tags=windowState.submitTags||[];if(tags.includes(id)){windowState.submitTags=tags.filter(x=>x!==id);btn.classList.remove('sel');}else if(tags.length<2){windowState.submitTags=[...tags,id];btn.classList.add('sel');}document.getElementById('sm-th').textContent=windowState.submitTags.length+'/2';smCk();};
-window.smCk=function(){const isOn=windowState.submitSource==='on_site';const t=(document.getElementById('sm-t')?.value||'').trim();const hasPhoto=windowState.submitPhoto!==null&&windowState.submitPhoto!==undefined;const hasTags=(windowState.submitTags||[]).length>0;let valid=false;if(isOn){valid=hasPhoto&&hasTags;}else{valid=(t.length>0||hasPhoto)&&hasTags;}document.getElementById('sm-sb').disabled=!valid;};
-window.smS=async function(){const isOn=windowState.submitSource==='on_site';const t=(document.getElementById('sm-t')?.value||'').trim();const tags=windowState.submitTags||[];if(!tags.length){alert('Please choose at least one tag');return;}if(isOn&&!windowState.submitPhoto){alert('Please upload a photo');return;}if(!isOn&&!t&&!windowState.submitPhoto){alert('Please write a wish or upload a photo');return;}setStatus('• Saving...');const w={source:isOn?'on_site':'remote',wish_text:isOn?null:t,tags:[...tags],photo_url:windowState.submitPhoto||null,reactions:{pray:0,heart:0,sparkle:0,thought:0}};const ok=await api('POST','',w);if(ok){document.querySelector('#app-modals .mo')?.remove();const msg=document.createElement('div');msg.className='msg';msg.textContent='Wish sealed!';document.body.appendChild(msg);setTimeout(()=>msg.remove(),1800);await load();}else{alert('Failed to save. Try again.');}setStatus('✓ Synced',true);};
+window.openSubmit = function(source) {
+  fabOpen = false;
+  document.getElementById('fabBtn').textContent = '+';
+  document.getElementById('fabMenu').style.display = 'none';
+  windowState.submitTags = [];
+  resetPhotoState();
+  windowState.submitSource = source;
 
-function dismissEntry(source){if(entryDone)return;entryDone=true;document.getElementById('entry').classList.add('gone');setTimeout(()=>{document.getElementById('entry').style.display='none';if(source)openSubmit(source);else document.getElementById('wishes-list').classList.add('show');},520);}
+  const isOn = source === 'on_site';
+  const photoHtml = isOn
+    ? '<div class="fs"><label class="fl">Photo <span style="color:var(--pink);">*</span></label><div id="sm-pw"><label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">◌</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to capture</div></label></div></div>'
+    : '<div class="fs"><label class="fl">Photo (optional)</label><div id="sm-pw"><label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">⌁</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to upload</div></label></div></div>';
+  modal(
+    '<div class="md" onclick="event.stopPropagation()">' +
+    '<button class="md-x" onclick="closeModal(this)">×</button>' +
+    '<h2>' + (isOn ? 'Upload your wish card' : 'What do you wish for?') + '</h2>' +
+    '<p class="sub">' + (isOn ? 'Use a photo of your handwritten card, then choose up to two tags.' : 'Leave a short wish fragment, then choose up to two tags.') + '</p>' +
+    (isOn ? '' : '<div class="fs"><label class="fl">Your wish</label><textarea class="ta" id="sm-t" placeholder="I wish..." maxlength="500" oninput="smU()"></textarea><div class="cc" id="sm-c">0/500</div></div>') +
+    photoHtml +
+    '<div class="fs"><label class="fl">Tags <span style="color:var(--pink);">*</span></label><div class="tg">' + TAGS.map(t => '<button class="tc" type="button" onclick="smT(this,\'' + t.id + '\')">' + t.label + '</button>').join('') + '</div><div style="margin-top:6px;text-align:right;font-size:10px;color:rgba(30,29,27,0.28);" id="sm-th">0/2</div></div>' +
+    '<button class="sb" id="sm-sb" type="button" onclick="smS()" disabled>Submit wish</button>' +
+    '</div>'
+  );
+  setTimeout(() => window.smCk(), 100);
+};
 
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelector('#app-modals .mo')?.remove();}});
+window.closeModal = function() {
+  closeAllModals();
+};
+
+window.smU = function() {
+  const field = document.getElementById('sm-t');
+  if (field) {
+    document.getElementById('sm-c').textContent = field.value.length + '/500';
+  }
+  window.smCk();
+};
+
+window.smP = function(input) {
+  const file = input.files?.[0];
+  if (!file) {
+    return;
+  }
+  if (!file.type.startsWith('image/')) {
+    alert('Please choose an image file.');
+    input.value = '';
+    return;
+  }
+  resetPhotoState();
+  const previewUrl = URL.createObjectURL(file);
+  windowState.submitPhotoFile = file;
+  windowState.submitPhotoPreviewUrl = previewUrl;
+  document.getElementById('sm-pw').innerHTML = '<div style="position:relative;overflow:hidden;border-radius:22px;background:#fbf9f7;"><img src="' + previewUrl + '" alt="Preview" style="display:block;width:100%;"/><button class="rm" onclick="smRp()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(30,29,27,0.55);color:#fff;cursor:pointer;">×</button></div>';
+  window.smCk();
+};
+
+window.smRp = function() {
+  resetPhotoState();
+  const isOn = windowState.submitSource === 'on_site';
+  document.getElementById('sm-pw').innerHTML = '<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:130px;border-radius:22px;border:1px dashed rgba(240,86,126,0.25);background:linear-gradient(180deg,rgba(240,86,126,0.035),rgba(241,88,77,0.03));cursor:pointer;"><input type="file" accept="image/*" onchange="smP(this)" style="display:none;"/><div style="font-size:26px;color:var(--pink);">' + (isOn ? '◌' : '⌁') + '</div><div style="font-size:12px;color:rgba(30,29,27,0.52);">Tap to ' + (isOn ? 'capture' : 'upload') + '</div></label>';
+  window.smCk();
+};
+
+window.smT = function(btn, id) {
+  const tags = windowState.submitTags || [];
+  if (tags.includes(id)) {
+    windowState.submitTags = tags.filter(x => x !== id);
+    btn.classList.remove('sel');
+  } else if (tags.length < 2) {
+    windowState.submitTags = [...tags, id];
+    btn.classList.add('sel');
+  }
+  document.getElementById('sm-th').textContent = windowState.submitTags.length + '/2';
+  window.smCk();
+};
+
+window.smCk = function() {
+  const isOn = windowState.submitSource === 'on_site';
+  const text = (document.getElementById('sm-t')?.value || '').trim();
+  const hasPhoto = !!windowState.submitPhotoFile;
+  const hasTags = (windowState.submitTags || []).length > 0;
+  let valid = false;
+  if (isOn) {
+    valid = hasPhoto && hasTags;
+  } else {
+    valid = (text.length > 0 || hasPhoto) && hasTags;
+  }
+  document.getElementById('sm-sb').disabled = !valid;
+};
+
+window.smS = async function() {
+  const isOn = windowState.submitSource === 'on_site';
+  const text = (document.getElementById('sm-t')?.value || '').trim();
+  const tags = windowState.submitTags || [];
+
+  if (!tags.length) {
+    alert('Please choose at least one tag');
+    return;
+  }
+  if (isOn && !windowState.submitPhotoFile) {
+    alert('Please upload a photo');
+    return;
+  }
+  if (!isOn && !text && !windowState.submitPhotoFile) {
+    alert('Please write a wish or upload a photo');
+    return;
+  }
+
+  setStatus('• Saving...');
+  try {
+    const photoUrl = windowState.submitPhotoFile ? await uploadPhoto(windowState.submitPhotoFile, windowState.submitSource) : null;
+    const wish = {
+      source: isOn ? 'on_site' : 'remote',
+      wish_text: isOn ? null : text,
+      tags: [...tags],
+      photo_url: photoUrl,
+      reactions: { pray: 0, heart: 0, sparkle: 0, thought: 0 }
+    };
+    await api('POST', '', wish);
+    closeAllModals();
+    const msg = document.createElement('div');
+    msg.className = 'msg';
+    msg.textContent = 'Wish sealed!';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 1800);
+    await load();
+  } catch (e) {
+    console.error('[Save]', e.message);
+    alert(e.message || 'Failed to save. Try again.');
+    setStatus('✗ Save failed');
+  }
+};
+
+window.dismissEntry = function(source) {
+  if (entryDone) {
+    return;
+  }
+  entryDone = true;
+  document.getElementById('entry').classList.add('gone');
+  setTimeout(() => {
+    document.getElementById('entry').style.display = 'none';
+    if (source) {
+      window.openSubmit(source);
+    } else {
+      document.getElementById('wishes-list').classList.add('show');
+    }
+  }, 520);
+};
+
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeAllModals();
+  }
+});
 
 load();
-setTimeout(()=>dismissEntry(null),3400);
+setTimeout(() => window.dismissEntry(null), 3400);
 </script>
 </body>
 </html>
